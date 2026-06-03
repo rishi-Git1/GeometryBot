@@ -45,6 +45,7 @@ def linear_schedule(initial_value: float):
 class GeometryDashEnv(gym.Env):
     def __init__(self):
         super(GeometryDashEnv, self).__init__()
+        self.last_prog = 0.0
         
         self.action_space = spaces.Discrete(2)
         self.observation_space = spaces.Box(low=0, high=255, shape=(80, 80, 1), dtype=np.uint8)
@@ -62,12 +63,14 @@ class GeometryDashEnv(gym.Env):
         self.death_penalty = -10.0
         self.reward_per_second = 0.2
         self.last_time = time.time()
+        # In step():o
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
         
         # Release the spacebar just in case it got stuck down
         pydirectinput.keyUp('space')
+        self.last_prog = 0.0
         
         # Fix Double Deaths
         # Text Loop
@@ -105,7 +108,11 @@ class GeometryDashEnv(gym.Env):
         delta_time = min(delta_time, 0.1) 
         
         # Strict Reward
-        reward = self.reward_per_second * delta_time 
+        # reward = self.reward_per_second * delta_time 
+        curr_prog = self._read_progress_bar(raw_gray_frame)
+        prog_delta = curr_prog - self.last_prog
+        reward = prog_delta * 100
+        self.last_prog = curr_prog
         
         # Detect Death
         is_dead = False
@@ -143,6 +150,16 @@ class GeometryDashEnv(gym.Env):
         if return_both:
             return gray, obs
         return obs
+    
+    def _read_progress_bar(self, raw_gray_frame):
+        bar_top, bar_bottom = 50, 70
+        bar_left, bar_right = 1200, 1800
+        bar_strip = raw_gray_frame[bar_top:bar_bottom, bar_left:bar_right]
+        filled_mask = bar_strip > 200
+        col_fill = filled_mask.mean(axis=0)
+        filled_cols = np.sum(col_fill > 0.5)
+        total_cols = bar_strip.shape(1)
+        return filled_cols / total_cols
 
 # Training Loop
 if __name__ == "__main__":
@@ -171,7 +188,7 @@ if __name__ == "__main__":
             learning_rate=linear_schedule(0.0003), 
             n_steps=256,  # Analyzes data every 256 frames (~30-40 seconds of gameplay)
             batch_size=64, 
-            ent_coef=0.08  # Slightly higher starting entropy for strong early experimentation
+            ent_coef=0.015  # Slightly higher starting entropy for strong early experimentation
         )
     
     print("Bot is live")
