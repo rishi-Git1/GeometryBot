@@ -61,8 +61,8 @@ class GeometryDashEnv(gym.Env):
             
         # Specific rewards
         self.death_penalty = -10.0
-        self.reward_per_second = 0.2
-        self.last_time = time.time()
+        #self.reward_per_second = 0.2
+        #self.last_time = time.time()
         # In step():o
 
     def reset(self, seed=None, options=None):
@@ -88,7 +88,7 @@ class GeometryDashEnv(gym.Env):
         time.sleep(0.5) 
         
         print("Respawn")
-        self.last_time = time.time() # Reset stopwatch
+        #self.last_time = time.time() # Reset stopwatch
         
         return self._get_screenshot(), {}
 
@@ -100,12 +100,12 @@ class GeometryDashEnv(gym.Env):
         terminated = False
         
         # Calculate how much time passed since the last frame
-        current_time = time.time()
-        delta_time = current_time - self.last_time
-        self.last_time = current_time
+        #current_time = time.time()
+        #delta_time = current_time - self.last_time
+        #self.last_time = current_time
         
         # Cap delta_time just in case the computer lags -> NOT GREAT RN
-        delta_time = min(delta_time, 0.1) 
+        #delta_time = min(delta_time, 0.1) 
         
         # Strict Reward
         # reward = self.reward_per_second * delta_time 
@@ -158,7 +158,7 @@ class GeometryDashEnv(gym.Env):
         filled_mask = bar_strip > 200
         col_fill = filled_mask.mean(axis=0)
         filled_cols = np.sum(col_fill > 0.5)
-        total_cols = bar_strip.shape(1)
+        total_cols = bar_strip.shape[1]
         return filled_cols / total_cols
 
 # Training Loop
